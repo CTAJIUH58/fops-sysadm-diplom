@@ -1,0 +1,27 @@
+---
+
+- name: RunElasticPB
+  hosts: elasticvm
+  become: yes
+  tasks:
+
+    - name: Change vm.max_map_count
+      command: "sysctl -w vm.max_map_count=262144"
+
+    - name: Run Elastic container
+      docker_container:
+        name: elastic01
+        image: "huecker.io/library/elasticsearch:8.2.2"
+        state: started
+        ports:
+          - "9200:9200"
+        env:
+          ES_JAVA_OPTS: "-Xms4g -Xmx4g"
+          ELASTIC_PASSWORD: "Sersqq1988$"
+          xpack.security.enabled: "false"
+          xpack.security.http.ssl.enabled: "false"
+          xpack.security.transport.ssl.enabled: "false"
+          xpack.security.enrollment.enabled: "false"
+          cluster.initial_master_nodes: "elastic01"
+          node.name: "elastic01"
+

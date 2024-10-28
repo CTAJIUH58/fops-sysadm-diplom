@@ -1,0 +1,8 @@
+---
+
+- import_playbook: WEBdeploy.yaml
+- import_playbook: InstaDockPB.yaml
+- import_playbook: RunElasticPB.yaml
+- import_playbook: RunPromPB.yaml
+- import_playbook: RunGrafanaPB.yaml
+- import_playbook: RunKibanaPB.yaml

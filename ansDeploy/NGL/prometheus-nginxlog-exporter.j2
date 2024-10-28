@@ -1,0 +1,5 @@
+namespace "{{ansible_hostname}}_log" {
+  source {
+    files = ["/var/log/nginx/*access.log","/var/log/nginx/*error.log"]
+  }
+}

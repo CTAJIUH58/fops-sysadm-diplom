@@ -1,0 +1,15 @@
+---
+
+- name: RunGrafanaPB
+  hosts: grafanavm
+  become: yes
+  tasks:
+
+    - name: Run Grafana container
+      docker_container:
+        name: grafana01
+        image: "grafana/grafana:latest"
+        state: started
+        ports:
+          - "3000:3000"
+

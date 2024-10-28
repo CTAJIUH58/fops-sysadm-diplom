@@ -1,0 +1,114 @@
+---
+
+- name: DeployWEB
+  hosts: webvm
+  become: yes
+  tasks:
+
+    - name: Update apt cache
+      apt:
+        update_cache: yes
+
+    - name: Install nginx
+      apt:
+        name: nginx
+        state: present
+
+    - name: Replace index.html by template
+      template:
+        force: yes
+        src: index.nginx-debian.j2
+        dest: /var/www/html/index.html
+
+    - name: Restart nginx
+      service:
+        name: nginx
+        state: restarted
+
+    - name: Copy filebeat deb
+      copy:
+        src: /home/user/ansPlaybooks/filebeat-8.2.2-amd64.deb
+        dest: /home/user/filebeat-8.2.2-amd64.deb
+
+    - name: Install filebeat deb
+      apt:
+        deb: /home/user/filebeat-8.2.2-amd64.deb
+
+    - name: Replace filebeat config by template
+      template:
+        src: /home/user/ansPlaybooks/filebeat.j2
+        dest: /etc/filebeat/filebeat.yml
+        force: yes
+
+    - name: Add filebeat module nginx conf
+      copy:
+        src: /home/user/ansPlaybooks/nginx.yml
+        dest: /etc/filebeat/modules.d/nginx.yml
+
+    - name: Restart filebeat
+      service:
+        name: filebeat
+        state: restarted
+
+    - name: Copy NodeExp service
+      copy:
+        src: /home/user/ansPlaybooks/node_exporter/node_exporter.service
+        dest: /etc/systemd/system/node_exporter.service
+
+    - name: Create group 'node_exporter' to run the node exporter service
+      group:
+        name: "node_exporter"
+        state: present
+
+    - name: Create user 'node_exporter' to run the node exporter service
+      user:
+        name: "node_exporter"
+        group: "node_exporter"
+        state: present
+
+    - name: Copy NodeExp bin
+      copy:
+        src: /home/user/ansPlaybooks/node_exporter/node_exporter
+        dest: /usr/local/bin/node_exporter
+        owner: node_exporter
+        group: node_exporter
+        mode: u=rwx,g=rwx,o=r
+
+    - name: Make sure 'node_exporter' service is started and enabled
+      systemd:
+        name: node_exporter
+        state: started
+        enabled: yes
+        daemon_reload: yes
+
+    - name: Create user 'NGL_exporter' to run the nginx log exporter service
+      user:
+        name: "NGL_exporter"
+        group: "adm"
+        state: present
+
+    - name: Copy NginxExp deb
+      copy:
+        src: /home/user/ansPlaybooks/prometheus-nginxlog-exporter_1.11.0_linux_amd64.deb
+        dest: /home/user/prometheus-nginxlog-exporter_1.11.0_linux_amd64.deb
+
+    - name: Install NginxExp deb
+      apt:
+        deb: /home/user/prometheus-nginxlog-exporter_1.11.0_linux_amd64.deb
+
+    - name: Template NginxExp conf
+      template:
+        src: /home/user/ansPlaybooks/prometheus-nginxlog-exporter.j2
+        dest: /etc/prometheus-nginxlog-exporter.hcl
+
+    - name: Copy NginxExp modified service
+      copy:
+        src: /home/user/ansPlaybooks/NGL_ExpServ
+        dest: /lib/systemd/system/prometheus-nginxlog-exporter.service
+
+    - name: Make sure Nginx_exporter service is started and enabled
+      systemd:
+        name: prometheus-nginxlog-exporter
+        state: started
+        enabled: yes
+        daemon_reload: yes

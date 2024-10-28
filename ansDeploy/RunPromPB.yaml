@@ -1,0 +1,22 @@
+---
+
+- name: RunPromPB
+  hosts: promvm
+  become: yes
+  tasks:
+
+    - name: Template Prom.yaml to prom host
+      template:
+        src: /home/user/ansPlaybooks/prometheus.j2
+        dest: /home/user/prometheus.yaml
+
+    - name: Run Prom container
+      docker_container:
+        name: prom01
+        image: "prom/prometheus:latest"
+        state: started
+        ports:
+          - "9090:9090"
+        volumes:
+          - "/home/user/prometheus.yaml:/etc/prometheus/prometheus.yml:rw"
+
